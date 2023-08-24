@@ -81,7 +81,6 @@ jobs:
           path: ${{ github.workspace }}/node_modules
 
       - name: Upload Check Point 1
-        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v3
         with:
           name: CheckPoint1-${{ runner.os }}
@@ -107,7 +106,6 @@ jobs:
             ${{ github.workspace }}/webpack.config.js
 
       - name: Upload Check Point 2
-        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v3
         with:
           name: CheckPoint2-${{ runner.os }}
