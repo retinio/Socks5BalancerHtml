@@ -45,7 +45,7 @@
     <script src="./zh-cn.js"></script>
 </head>
 <body>
-<div id="body">
+<div id="body" style="padding: 0.5rem;">
     now running connect: <span class="string-pad">{{ allConnectCount }}</span>
     <br/>
     now rule: <span class="string-pad">{{ rule }}</span>
@@ -81,7 +81,7 @@
         <h3 style="color: palevioletred; padding: 0 1em;">No Data Come From Server.</h3>
         <div style="color: orange;"
              v-if="!!InternetState.error">
-            {{InternetState.error.message}}
+            {{ InternetState.error.message }}
         </div>
     </template>
     <template v-if="disableConnectTest">
@@ -100,8 +100,10 @@
             <th>run</th>
             <th>lastTCPCheckTime</th>
             <th>time after</th>
+            <th>TCPPing</th>
             <th v-if="!disableConnectTest">lastConnectCheckTime</th>
             <th v-if="!disableConnectTest">time after</th>
+            <th v-if="!disableConnectTest">ConnectPing</th>
             <th>ManualDisable</th>
             <th>Usable</th>
             <th>Close Connect</th>
@@ -116,9 +118,9 @@
         <tbody>
 
         <tr v-for="u in upstreamPool">
-            <td style="border-left-width: 0;">{{_.parseInt(u.index) + 1}}.</td>
-            <td>{{u.host}}:{{u.port}}</td>
-            <td>{{u.name}}</td>
+            <td style="border-left-width: 0;">{{ _.parseInt(u.index) + 1 }}.</td>
+            <td>{{ u.host }}:{{ u.port }}</td>
+            <td>{{ u.name }}</td>
             <td>
                 <span style="color: gray" v-if="u.lastOnlineTime==='<empty>'">Unknown</span>
                 <span style="color: green" v-else-if="u.isOffline==='false'">True</span>
@@ -129,11 +131,14 @@
                 <span style="color: green" v-else-if="u.lastConnectFailed==='false'">True</span>
                 <span style="color: red" v-else>False</span>
             </td>
-            <td>{{u.sessionsCount}} <span class="opacity_01">/ {{u.connectCount}} / {{u.connectCount2}}</span></td>
-            <td>{{u.lastOnlineTime}}</td>
-            <td>{{calcDurationOfTimeStringFromNowTime(u.lastOnlineTime)}}</td>
-            <td v-if="!disableConnectTest">{{u.lastConnectTime}}</td>
-            <td v-if="!disableConnectTest">{{calcDurationOfTimeStringFromNowTime(u.lastConnectTime)}}</td>
+            <td>{{ u.sessionsCount }} <span class="opacity_01">/ {{ u.connectCount }} / {{ u.connectCount2 }}</span>
+            </td>
+            <td>{{ u.lastOnlineTime }}</td>
+            <td>{{ calcDurationOfTimeStringFromNowTime(u.lastOnlineTime) }}</td>
+            <td>{{ trimPingString(u.lastOnlinePing) }}</td>
+            <td v-if="!disableConnectTest">{{ u.lastConnectTime }}</td>
+            <td v-if="!disableConnectTest">{{ calcDurationOfTimeStringFromNowTime(u.lastConnectTime) }}</td>
+            <td v-if="!disableConnectTest">{{ trimPingString(u.lastConnectPing) }}</td>
             <td>
                 <template v-if="u.isManualDisable==='true'">
                     <span style="color: red">Disabled</span>
@@ -177,9 +182,9 @@
                     Check Now
                 </a>
             </td>
-            <td>{{formatData(u)}}</td>
-            <td>{{formatSpeedMax(u)}}</td>
-            <td>{{formatSpeed(u)}}</td>
+            <td>{{ formatData(u) }}</td>
+            <td>{{ formatSpeedMax(u) }}</td>
+            <td>{{ formatSpeed(u) }}</td>
             <!--            <td></td>-->
         </tr>
 
@@ -207,16 +212,16 @@
                     Force Check All Now
                 </a>
                 <span class="table-info-cell">
-                ↑ {{dataCount2String(totalUp)}}
-                ↓ {{dataCount2String(totalDown)}}
+                ↑ {{ dataCount2String(totalUp) }}
+                ↓ {{ dataCount2String(totalDown) }}
                 </span>
                 <span class="table-info-cell">
-                ↑Max {{speed2String(totalUpSpeedMax)}}
-                ↓Max {{speed2String(totalDownSpeedMax)}}
+                ↑Max {{ speed2String(totalUpSpeedMax) }}
+                ↓Max {{ speed2String(totalDownSpeedMax) }}
                 </span>
                 <span class="table-info-cell">
-                ↑ {{speed2String(totalUpSpeed)}}
-                ↓ {{speed2String(totalDownSpeed)}}
+                ↑ {{ speed2String(totalUpSpeed) }}
+                ↓ {{ speed2String(totalDownSpeed) }}
                 </span>
             </td>
         </tr>
@@ -287,8 +292,8 @@
         <tbody>
 
         <tr v-for="u in ClientIndex">
-            <td>{{u.index}}</td>
-            <td>{{u.lastUseUpstreamIndex + 1}}</td>
+            <td>{{ u.index }}</td>
+            <td>{{ u.lastUseUpstreamIndex + 1 }}</td>
             <td>
                 <select name="newRule" v-model="u.lastUseUpstreamIndex"
                         v-on:change="sendCommand(
@@ -305,7 +310,7 @@
                     </template>
                 </select>
             </td>
-            <td>{{u.rule}}</td>
+            <td>{{ u.rule }}</td>
             <td>
                 <select name="newRule" v-model="u.rule"
                         v-on:change="sendCommand('/op?_targetMode=client&newRule=' + u.rule+'&_target=' + u.index)"
@@ -316,7 +321,7 @@
                     </template>
                 </select>
             </td>
-            <td>{{u.sessionsCount}} / <span class="opacity_01">{{u.connectCount}}</span></td>
+            <td>{{ u.sessionsCount }} / <span class="opacity_01">{{ u.connectCount }}</span></td>
             <td>
                 <a href="javascript:void(0)"
                    v-on:click="sendCommand(
@@ -328,9 +333,9 @@
                     CloseConnect
                 </a>
             </td>
-            <td>{{formatData(u)}}</td>
-            <td>{{formatSpeedMax(u)}}</td>
-            <td>{{formatSpeed(u)}}</td>
+            <td>{{ formatData(u) }}</td>
+            <td>{{ formatSpeedMax(u) }}</td>
+            <td>{{ formatSpeed(u) }}</td>
             <td>
                 <a target="_blank"
                    v-bind:href="'perState.html?backend='+backend+'&targetMode=client&target='+u.index"
@@ -344,16 +349,16 @@
         <tr>
             <td colspan="11">
                 <span class="table-info-cell">
-                ↑ {{dataCount2String(reduceField(ClientIndex, 'byteUpLast'))}}
-                ↓ {{dataCount2String(reduceField(ClientIndex, 'byteDownLast'))}}
+                ↑ {{ dataCount2String(reduceField(ClientIndex, 'byteUpLast')) }}
+                ↓ {{ dataCount2String(reduceField(ClientIndex, 'byteDownLast')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑Max {{speed2String(reduceField(ClientIndex, 'byteUpChangeMax'))}}
-                ↓Max {{speed2String(reduceField(ClientIndex, 'byteDownChangeMax'))}}
+                ↑Max {{ speed2String(reduceField(ClientIndex, 'byteUpChangeMax')) }}
+                ↓Max {{ speed2String(reduceField(ClientIndex, 'byteDownChangeMax')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑ {{speed2String(reduceField(ClientIndex, 'byteUpChange'))}}
-                ↓ {{speed2String(reduceField(ClientIndex, 'byteDownChange'))}}
+                ↑ {{ speed2String(reduceField(ClientIndex, 'byteUpChange')) }}
+                ↓ {{ speed2String(reduceField(ClientIndex, 'byteDownChange')) }}
                 </span>
             </td>
         </tr>
@@ -386,8 +391,8 @@
         <tbody>
 
         <tr v-for="u in ListenIndex">
-            <td>{{u.index}}</td>
-            <td>{{u.lastUseUpstreamIndex + 1}}</td>
+            <td>{{ u.index }}</td>
+            <td>{{ u.lastUseUpstreamIndex + 1 }}</td>
             <td>
                 <select name="newRule" v-model="u.lastUseUpstreamIndex"
                         v-on:change="sendCommand(
@@ -404,7 +409,7 @@
                     </template>
                 </select>
             </td>
-            <td>{{u.rule}}</td>
+            <td>{{ u.rule }}</td>
             <td>
                 <select name="newRule" v-model="u.rule"
                         v-on:change="sendCommand('/op?_targetMode=listen&newRule=' + u.rule+'&_target=' + u.index)"
@@ -415,7 +420,7 @@
                     </template>
                 </select>
             </td>
-            <td>{{u.sessionsCount}} / <span class="opacity_01">{{u.connectCount}}</span></td>
+            <td>{{ u.sessionsCount }} / <span class="opacity_01">{{ u.connectCount }}</span></td>
             <td>
                 <a href="javascript:void(0)"
                    v-on:click="sendCommand(
@@ -427,9 +432,9 @@
                     CloseConnect
                 </a>
             </td>
-            <td>{{formatData(u)}}</td>
-            <td>{{formatSpeedMax(u)}}</td>
-            <td>{{formatSpeed(u)}}</td>
+            <td>{{ formatData(u) }}</td>
+            <td>{{ formatSpeedMax(u) }}</td>
+            <td>{{ formatSpeed(u) }}</td>
             <td>
                 <a target="_blank"
                    v-bind:href="'perState.html?backend='+backend+'&targetMode=listen&target='+u.index"
@@ -443,16 +448,16 @@
         <tr>
             <td colspan="11">
                 <span class="table-info-cell">
-                ↑ {{dataCount2String(reduceField(ListenIndex, 'byteUpLast'))}}
-                ↓ {{dataCount2String(reduceField(ListenIndex, 'byteDownLast'))}}
+                ↑ {{ dataCount2String(reduceField(ListenIndex, 'byteUpLast')) }}
+                ↓ {{ dataCount2String(reduceField(ListenIndex, 'byteDownLast')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑Max {{speed2String(reduceField(ListenIndex, 'byteUpChangeMax'))}}
-                ↓Max {{speed2String(reduceField(ListenIndex, 'byteDownChangeMax'))}}
+                ↑Max {{ speed2String(reduceField(ListenIndex, 'byteUpChangeMax')) }}
+                ↓Max {{ speed2String(reduceField(ListenIndex, 'byteDownChangeMax')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑ {{speed2String(reduceField(ListenIndex, 'byteUpChange'))}}
-                ↓ {{speed2String(reduceField(ListenIndex, 'byteDownChange'))}}
+                ↑ {{ speed2String(reduceField(ListenIndex, 'byteUpChange')) }}
+                ↓ {{ speed2String(reduceField(ListenIndex, 'byteDownChange')) }}
                 </span>
             </td>
         </tr>
@@ -484,11 +489,11 @@
         <tbody>
 
         <tr v-for="u in AuthIndex">
-            <td>{{u.id}}</td>
-            <td>{{u.user}}</td>
-            <td>{{u.pwd}}</td>
-            <td>{{u.base64}}</td>
-            <td>{{u.sessionsCount}}</td>
+            <td>{{ u.id }}</td>
+            <td>{{ u.user }}</td>
+            <td>{{ u.pwd }}</td>
+            <td>{{ u.base64 }}</td>
+            <td>{{ u.sessionsCount }}</td>
             <td>
                 <a href="javascript:void(0)"
                    v-on:click="sendCommand(
@@ -500,9 +505,9 @@
                     CloseConnect
                 </a>
             </td>
-            <td>{{formatData(u)}}</td>
-            <td>{{formatSpeedMax(u)}}</td>
-            <td>{{formatSpeed(u)}}</td>
+            <td>{{ formatData(u) }}</td>
+            <td>{{ formatSpeedMax(u) }}</td>
+            <td>{{ formatSpeed(u) }}</td>
             <td>
                 <a target="_blank"
                    v-bind:href="'perState.html?backend='+backend+'&targetMode=authUser&target='+u.index"
@@ -516,16 +521,16 @@
         <tr>
             <td colspan="11">
                 <span class="table-info-cell">
-                ↑ {{dataCount2String(reduceField(AuthIndex, 'byteUpLast'))}}
-                ↓ {{dataCount2String(reduceField(AuthIndex, 'byteDownLast'))}}
+                ↑ {{ dataCount2String(reduceField(AuthIndex, 'byteUpLast')) }}
+                ↓ {{ dataCount2String(reduceField(AuthIndex, 'byteDownLast')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑Max {{speed2String(reduceField(AuthIndex, 'byteUpChangeMax'))}}
-                ↓Max {{speed2String(reduceField(AuthIndex, 'byteDownChangeMax'))}}
+                ↑Max {{ speed2String(reduceField(AuthIndex, 'byteUpChangeMax')) }}
+                ↓Max {{ speed2String(reduceField(AuthIndex, 'byteDownChangeMax')) }}
                 </span>
                 <span class="table-info-cell">
-                ↑ {{speed2String(reduceField(AuthIndex, 'byteUpChange'))}}
-                ↓ {{speed2String(reduceField(AuthIndex, 'byteDownChange'))}}
+                ↑ {{ speed2String(reduceField(AuthIndex, 'byteUpChange')) }}
+                ↓ {{ speed2String(reduceField(AuthIndex, 'byteDownChange')) }}
                 </span>
             </td>
         </tr>
@@ -812,6 +817,9 @@
             speed2String: speed2String,
             dataCount2String: dataCount2String,
             reduceField: reduceField,
+            trimPingString: (s) => {
+                return s === '<empty>' ? s : (s + 'ms');
+            },
             calcDurationOfTimeStringFromNowTime: (ts) => {
                 if (ts === "<empty>") {
                     return "<empty>";
