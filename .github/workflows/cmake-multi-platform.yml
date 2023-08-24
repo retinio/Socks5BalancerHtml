@@ -78,7 +78,11 @@ jobs:
       - name: Remove File
         uses: Lyoko-Jeremie/js-rm-github-action@master
         with:
-          path: ${{ github.workspace }}/node_modules
+          path: |
+            ${{ github.workspace }}/node_modules
+            ${{ github.workspace }}/.git
+            ${{ github.workspace }}/.idea
+            ${{ github.workspace }}/.github
 
       - name: Upload Check Point 1
         uses: actions/upload-artifact@v3
@@ -91,6 +95,9 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/node_modules
+            ${{ github.workspace }}/.git
+            ${{ github.workspace }}/.idea
+            ${{ github.workspace }}/.github
             ${{ github.workspace }}/.yarn
             ${{ github.workspace }}/.editorconfig
             ${{ github.workspace }}/.gitattributes
