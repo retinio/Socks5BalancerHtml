@@ -1,6 +1,8 @@
 {
   "name": "Socks5BalancerAsioHtml",
   "packageManager": "yarn@3.4.1",
+  "author": "Jeremie",
+  "license": "GPLv3",
   "scripts": {
     "build": "webpack",
     "build:watch": "webpack -w"

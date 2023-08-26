@@ -1,3 +1,21 @@
+/**
+ * Socks5BalancerAsio : A Simple TCP Socket Balancer for balance Multi Socks5 Proxy Backend Powered by Boost.Asio
+ * Copyright (C) <2020>  <Jeremie>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 // https://github.com/moment/moment/issues/463#issuecomment-552498641
 
 import moment from 'moment';
@@ -325,23 +343,38 @@ function tryGetBackendConfigFromServer() {
 // }
 
 
-var defaultBackendHost = "127.0.0.1";
-var defaultBackendPort = 5010;
+let defaultBackendHost = "127.0.0.1";
+let defaultBackendPort = 5010;
 
-var getI18nTable = () => {
-    if (window.navigator.language === "zh-CN") {
+const SelectableI18NLanguageTable = [
+    ['zh-CN', '中文'],
+    ['en-US', 'English']
+];
+const getI18nTable = (l: 'zh-CN' | 'en-US' | string | undefined = undefined) => {
+    const ls = localStorage.getItem('selectedLanguageI18nTable');
+    const lang = l || ls || window.navigator.language;
+    if (lang === "zh-CN") {
+        console.log('chinese');
         // chinese
         window.i18nTable = zhCN;
-        app.i18nTable = zhCN;
-        moment.locale('zh-cn');
-    } else {
+        moment.locale('zh-CN');
+    } else if (lang === "en-US") {
+        console.log('english');
         // english
         window.i18nTable = enUS;
-        app.i18nTable = enUS;
+        moment.locale('en-US');
+    } else {
+        console.log('none');
+        // english
+        window.i18nTable = enUS;
         moment.locale('en-US');
     }
     formatDuration = window.i18nTable.formatDurationFunction.f as any;
+    app && app.flushI18nTable();
+    localStorage.setItem('selectedLanguageI18nTable', lang);
 };
+getI18nTable();
+window.getI18nTable = getI18nTable;
 
 class VueAppData {
     i18nTable: I18NTableType = {} as any;
@@ -406,6 +439,19 @@ class VueAppData {
     autoFlushState = false;
     autoFlushHandle: any = -1;
     tableState = window.i18nTable;
+
+    set nowLang(l: string) {
+        getI18nTable(l as any);
+        location.reload();
+    }
+
+    get nowLang() {
+        const ls = localStorage.getItem('selectedLanguageI18nTable');
+        const lang = ls || window.navigator.language;
+        return lang;
+    }
+
+    SelectableI18NLanguageTable = SelectableI18NLanguageTable;
 }
 
 class VueAppMethods {
@@ -590,6 +636,12 @@ class VueAppMethods {
             app.flush();
         });
     };
+    flushI18nTable = () => {
+        console.log('flushI18nTable');
+        app.$set(app.$data, 'i18nTable', window.i18nTable);
+        console.log('i18nTable', app.$data.i18nTable);
+        app.$forceUpdate();
+    };
 }
 
 var app: Vue & VueAppData & VueAppMethods = new Vue({
@@ -598,5 +650,5 @@ var app: Vue & VueAppData & VueAppMethods = new Vue({
     computed: {},
     methods: new VueAppMethods(),
 });
-getI18nTable();
+app.flushI18nTable();
 tryGetBackendConfigFromServer();
