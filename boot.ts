@@ -28,7 +28,7 @@ import 'i18n-table/zh-CN';
 import {I18NTableType, zhCN} from "./i18n-table/zh-CN";
 import {enUS} from "./i18n-table/en-US";
 
-interface ServerStateType {
+export interface ServerStateType {
     config: {
         listenHost: string,
         listenPort: string,
@@ -423,8 +423,8 @@ class VueAppData {
         if (s) {
             return s;
         } else {
-            // setSearchParams('backend', defaultBackendHost + '=' + defaultBackendPort);
-            return defaultBackendHost + '=' + defaultBackendPort;
+            // setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
+            return defaultBackendHost + ':' + defaultBackendPort;
         }
     };
 

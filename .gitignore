@@ -230,3 +230,5 @@ i18n/*.map
 
 boot.js
 boot.js.map
+DelayInfo.js
+DelayInfo.js.map

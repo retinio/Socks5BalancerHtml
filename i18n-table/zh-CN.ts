@@ -105,6 +105,8 @@ export const zhCN = (() => {
         data: {s: "总数据量"},
         speedMax: {s: "最大速度"},
         speed: {s: "当前速度"},
+        delayInfo: {s: "延迟信息"},
+        detail: {s: "详情"},
         online_Unknown: {s: "未知"},
         online_True: {s: "在线"},
         online_False: {s: "离线"},
@@ -168,6 +170,10 @@ export const zhCN = (() => {
         clickToShowDetail: {s: "点击查看详情"},
         timeMs: {s: "毫秒"},
         total: {s: "累计"},
+        tcpPingWast: {s: "tcpPing耗时"},
+        httpPingWast: {s: "httpPing耗时"},
+        relayFirstPingWast: {s: "relayFirstPing耗时"},
+        totalWast: {s: "total耗时"},
     };
     return tableState;
 })();

@@ -108,6 +108,8 @@ export const enUS = (() => {
         data: {s: "data"},
         speedMax: {s: "speedMax"},
         speed: {s: "speed"},
+        delayInfo: {s: "DelayInfo"},
+        detail: {s: "detail"},
         online_Unknown: {s: "Unknown"},
         online_True: {s: "True"},
         online_False: {s: "False"},
@@ -171,6 +173,10 @@ export const enUS = (() => {
         clickToShowDetail: {s: "click to show detail"},
         timeMs: {s: "ms"},
         total: {s: "total"},
+        tcpPingWast: {s: "tcpPingWast"},
+        httpPingWast: {s: "httpPingWast"},
+        relayFirstPingWast: {s: "relayFirstPingWast"},
+        totalWast: {s: "totalWast"},
     };
     return tableState;
 })();

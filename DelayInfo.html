@@ -60,6 +60,50 @@
     <link rel="stylesheet" href="./bootstrap.min.css">
 </head>
 <body>
-<div id="ch"></div>
+
+<div style="width: calc(100vw);height: calc(30vh);">
+    <canvas id="tcpPingC" width="400" height="400"></canvas>
+</div>
+<div style="width: calc(100vw);height: calc(30vh);">
+    <canvas id="httpPingC" width="400" height="400"></canvas>
+</div>
+<div style="width: calc(100vw);height: calc(30vh);">
+    <canvas id="relayFirstPingC" width="400" height="400"></canvas>
+</div>
+<div class="container mt-3" id="app">
+    <div class="row">
+        <div class="col">
+            <span>{{ tableState.startTime.s }}</span>
+            <span id="startTimeID">{{ startTimeID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.runTime.s }}</span>
+            <span id="runTimeID">{{ runTimeID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.nowTime.s }}</span>
+            <span id="nowTimeID">{{ nowTimeID }}</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <span>{{ tableState.tcpPingWast.s }}</span>
+            <span id="tcpPingWastID">{{ tcpPingWastID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.httpPingWast.s }}</span>
+            <span id="httpPingWastID">{{ httpPingWastID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.relayFirstPingWast.s }}</span>
+            <span id="relayFirstPingWastID">{{ relayFirstPingWastID }}</span>
+        </div>
+        <div class="total">
+            <span>{{ tableState.totalWast.s }}</span>
+            <span id="totalWastID">{{ totalWastID }}</span>
+        </div>
+    </div>
+</div>
+<script src="./DelayInfo.js"></script>
 </body>
 </html>
