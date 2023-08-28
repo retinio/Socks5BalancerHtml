@@ -160,8 +160,13 @@
                 <th>{{ tableState.data.s }}</th>
                 <th>{{ tableState.speedMax.s }}</th>
                 <th>{{ tableState.speed.s }}</th>
-                <th>{{ tableState.delayInfo.s }}</th>
-                <!--        <th></th>-->
+                <!-- <th>{{ tableState.delayInfo.s }}</th>-->
+                <th>
+                    <a target="_blank"
+                       v-bind:href="'DelayInfoAll.html?backend='+$data.backend"
+                    >{{ tableState.delayInfo.s }}</a>
+                </th>
+                <!-- <th></th>-->
             </tr>
             </thead>
             <tbody>
@@ -247,7 +252,7 @@
                        v-bind:href="'DelayInfo.html?backend='+$data.backend+'&backendServerIndex='+u.index"
                     >{{ tableState.delayInfo.s }}</a>
                 </td>
-                <!--            <td></td>-->
+                <!-- <td></td>-->
             </tr>
 
             </tbody>
