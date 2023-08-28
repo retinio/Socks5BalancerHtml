@@ -50866,6 +50866,17 @@ function makeChartTimeBase(element, data, logarithmic = false) {
         options: {
             maintainAspectRatio: false,
             animation: false,
+            // plugins: {
+            //     tooltip: {
+            //         callbacks: {
+            //             label: (ctx: TooltipItem<keyof ChartTypeRegistry>) => {
+            //                 const v =
+            //                     ctx.dataset.data[ctx.dataIndex] as unknown as { x: moment.Moment, y: number };
+            //                 return v.x + ' - ' + v.y;
+            //             },
+            //         },
+            //     },
+            // },
             scales: {
                 x: {
                     // https://www.chartjs.org/docs/latest/axes/cartesian/time.html#display-formats
@@ -50943,14 +50954,18 @@ class VueAppMethods {
                 //     total: _.parseInt(T.PingInfoTotal.total as unknown as string),
                 // };
                 // init chart
-                const createDatasets = (AAA) => {
+                const createDatasets = (AAA, removeNeg = false) => {
                     return T.pool.map(A => {
                         return {
                             label: `(${A.BaseInfo.index}) ${A.BaseInfo.name} [${A.BaseInfo.host}:${A.BaseInfo.port}]`,
                             data: (A[AAA] ? A[AAA].map(N => {
+                                let y = lodash__WEBPACK_IMPORTED_MODULE_2___default().parseInt(N.delay);
+                                if (removeNeg) {
+                                    y = ((y === -1) ? 0 : y);
+                                }
                                 return {
                                     x: (0,_utils__WEBPACK_IMPORTED_MODULE_5__.serverTimeString2Moment)(N.time),
-                                    y: lodash__WEBPACK_IMPORTED_MODULE_2___default().parseInt(N.delay),
+                                    y: y,
                                 };
                             }) : []),
                             fill: false,
@@ -50958,13 +50973,13 @@ class VueAppMethods {
                     });
                 };
                 app.tcpPingC = makeChartTimeBase('tcpPingC', {
-                    datasets: createDatasets("tcpPing"),
-                }, true);
+                    datasets: createDatasets("tcpPing", false),
+                }, false);
                 app.httpPingC = makeChartTimeBase('httpPingC', {
-                    datasets: createDatasets("httpPing"),
+                    datasets: createDatasets("httpPing", true),
                 }, true);
                 app.relayFirstPingC = makeChartTimeBase('relayFirstPingC', {
-                    datasets: createDatasets("relayFirstPing"),
+                    datasets: createDatasets("relayFirstPing", true),
                 }, true);
                 // app.tcpPingWastID = '' + T.PingInfoTotal.tcpPing + ' ' + window.i18nTable.timeMs.s;
                 // app.httpPingWastID = '' + T.PingInfoTotal.httpPing + ' ' + window.i18nTable.timeMs.s;

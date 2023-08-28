@@ -39,7 +39,7 @@ import {
     SelectableI18NLanguageTable
 } from './utils';
 
-import {ChartData, Chart, registerables, ChartItem} from "chart.js";
+import {ChartData, Chart, registerables, ChartItem, ChartTypeRegistry, TooltipItem, Point} from "chart.js";
 import 'chartjs-adapter-moment';
 import {CartesianScaleTypeRegistry, LogarithmicScaleOptions, TimeScaleOptions} from "chart.js/dist/types";
 
@@ -64,6 +64,17 @@ function makeChartTimeBase(element: ChartItem, data: ChartData<'line'>, logarith
             options: {
                 maintainAspectRatio: false,
                 animation: false,
+                // plugins: {
+                //     tooltip: {
+                //         callbacks: {
+                //             label: (ctx: TooltipItem<keyof ChartTypeRegistry>) => {
+                //                 const v =
+                //                     ctx.dataset.data[ctx.dataIndex] as unknown as { x: moment.Moment, y: number };
+                //                 return v.x + ' - ' + v.y;
+                //             },
+                //         },
+                //     },
+                // },
                 scales: {
                     x: {
                         // https://www.chartjs.org/docs/latest/axes/cartesian/time.html#display-formats
@@ -155,14 +166,21 @@ class VueAppMethods {
             //     total: _.parseInt(T.PingInfoTotal.total as unknown as string),
             // };
             // init chart
-            const createDatasets = (AAA: keyof Pick<ServerBackendDelayInfo, 'tcpPing' | 'httpPing' | 'relayFirstPing'>) => {
+            const createDatasets = (
+                AAA: keyof Pick<ServerBackendDelayInfo, 'tcpPing' | 'httpPing' | 'relayFirstPing'>,
+                removeNeg: boolean = false,
+            ) => {
                 return T.pool.map(A => {
                     return {
                         label: `(${A.BaseInfo.index}) ${A.BaseInfo.name} [${A.BaseInfo.host}:${A.BaseInfo.port}]`,
                         data: (A[AAA] ? A[AAA]!.map(N => {
+                            let y = _.parseInt(N.delay as unknown as string);
+                            if (removeNeg) {
+                                y = ((y === -1) ? 0 : y);
+                            }
                             return {
                                 x: serverTimeString2Moment(N.time) as any,
-                                y: _.parseInt(N.delay as unknown as string),
+                                y: y,
                             };
                         }) : []) as ChartData<'line'>['datasets'][0]['data'],
                         fill: false,
@@ -170,13 +188,13 @@ class VueAppMethods {
                 });
             };
             app.tcpPingC = makeChartTimeBase('tcpPingC', {
-                datasets: createDatasets("tcpPing"),
-            }, true);
+                datasets: createDatasets("tcpPing", false),
+            }, false);
             app.httpPingC = makeChartTimeBase('httpPingC', {
-                datasets: createDatasets("httpPing"),
+                datasets: createDatasets("httpPing", true),
             }, true);
             app.relayFirstPingC = makeChartTimeBase('relayFirstPingC', {
-                datasets: createDatasets("relayFirstPing"),
+                datasets: createDatasets("relayFirstPing", true),
             }, true);
             // app.tcpPingWastID = '' + T.PingInfoTotal.tcpPing + ' ' + window.i18nTable.timeMs.s;
             // app.httpPingWastID = '' + T.PingInfoTotal.httpPing + ' ' + window.i18nTable.timeMs.s;
