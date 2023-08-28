@@ -39,9 +39,9 @@ interface DelayInfoItem {
 
 export interface ServerBackendDelayInfo {
     BaseInfo: ServerStateType['pool']['upstream'][0];
-    tcpPing: DelayInfoItem[],
-    httpPing: DelayInfoItem[],
-    relayFirstPing: DelayInfoItem[],
+    tcpPing?: DelayInfoItem[],
+    httpPing?: DelayInfoItem[],
+    relayFirstPing?: DelayInfoItem[],
     PingInfoTotal: {
         tcpPing: number,
         httpPing: number,
@@ -205,9 +205,9 @@ class VueAppData {
     runTimeID = '';
     nowTimeID = '';
 
-    tcpPingC: any;
-    httpPingC: any;
-    relayFirstPingC: any;
+    tcpPingC?: ReturnType<typeof makeChart>;
+    httpPingC?: ReturnType<typeof makeChart>;
+    relayFirstPingC?: ReturnType<typeof makeChart>;
 }
 
 class VueAppMethods {
@@ -221,24 +221,24 @@ class VueAppMethods {
             return Promise.reject(T);
         }).then((T: ServerBackendDelayInfo) => {
             // wash data
-            T.tcpPing = T.tcpPing.map(N => {
+            T.tcpPing = T.tcpPing ? T.tcpPing.map(N => {
                 return {
                     time: N.time,
                     delay: _.parseInt(N.delay as unknown as string),
                 };
-            });
-            T.httpPing = T.httpPing.map(N => {
+            }) : [];
+            T.httpPing = T.httpPing ? T.httpPing.map(N => {
                 return {
                     time: N.time,
                     delay: _.parseInt(N.delay as unknown as string),
                 };
-            });
-            T.relayFirstPing = T.relayFirstPing.map(N => {
+            }) : [];
+            T.relayFirstPing = T.relayFirstPing ? T.relayFirstPing.map(N => {
                 return {
                     time: N.time,
                     delay: _.parseInt(N.delay as unknown as string),
                 };
-            });
+            }) : [];
             T.runTime = _.parseInt(T.runTime as unknown as string);
             T.PingInfoTotal = {
                 tcpPing: _.parseInt(T.PingInfoTotal.tcpPing as unknown as string),

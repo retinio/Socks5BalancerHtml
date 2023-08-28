@@ -28,6 +28,10 @@ import 'i18n-table/zh-CN';
 import {I18NTableType, zhCN} from "./i18n-table/zh-CN";
 import {enUS} from "./i18n-table/en-US";
 
+import {ChartData, Chart, registerables, ChartItem} from "chart.js";
+
+Chart.register(...registerables);
+
 export interface ServerStateType {
     config: {
         listenHost: string,
