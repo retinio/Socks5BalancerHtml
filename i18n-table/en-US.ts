@@ -17,24 +17,14 @@
  */
 
 import moment from 'moment';
+import {I18NTableType} from '../I18NTableType';
 
-// @ts-ignore
-function formatInt(int: number) {
+export function formatInt(int: number) {
     if (int < 10) {
         return `0${int}`;
     }
     return `${int}`;
 }
-
-
-export interface I18NTableType {
-    [key: string]: { s: string, f?: CallableFunction },
-
-    formatDurationFunction: { s: string, f: (time: number) => string },
-    emptyFilterFunction: { s: string, f: (s: string) => string },
-    emptyFilterPingFunction: { s: string, f: (s: string) => string },
-}
-
 
 // @ts-ignore
 window.i18n = window.i18n || {};

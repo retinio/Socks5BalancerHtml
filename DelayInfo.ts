@@ -23,143 +23,28 @@ import _ from "lodash";
 
 import 'i18n-table/en-US';
 import 'i18n-table/zh-CN';
-import {I18NTableType, zhCN} from "./i18n-table/zh-CN";
-import {enUS} from "./i18n-table/en-US";
-
-import type {ServerStateType} from './boot'
+import {I18NTableType} from './I18NTableType';
+import {ServerBackendDelayInfo, DelayInfoItem} from './ServerBackendDelayInfo';
+import {
+    tryGetBackendConfigFromServer,
+    serverTimeString2Moment,
+    getBackend,
+    getSearchParams,
+    getI18nTable,
+    SelectableI18NLanguageTable
+} from './utils';
 
 import {ChartData, Chart, registerables, ChartItem} from "chart.js";
 
 Chart.register(...registerables);
 
-interface DelayInfoItem {
-    delay: number,
-    time: string,
-}
-
-export interface ServerBackendDelayInfo {
-    BaseInfo: ServerStateType['pool']['upstream'][0];
-    tcpPing?: DelayInfoItem[],
-    httpPing?: DelayInfoItem[],
-    relayFirstPing?: DelayInfoItem[],
-    PingInfoTotal: {
-        tcpPing: number,
-        httpPing: number,
-        relayFirstPing: number,
-        total: number,
-    };
-    startTime: string;
-    runTime: number;
-    nowTime: string;
-}
-
-
-let defaultBackendHost = "127.0.0.1";
-let defaultBackendPort = 5010;
-
-
-function getSearchParams(key: string) {
-    var q = (new URL(document.location as unknown as string)).searchParams;
-    return q.get(key);
-}
-
-function setSearchParams(key: string, value: string) {
-    var newQ = (new URL(document.location as unknown as string)).searchParams;
-    newQ.set(key, value);
-    window.history.pushState(null, null as unknown as string, '?' + newQ.toString());
-}
-
-function tryGetBackendConfigFromServer() {
-    return fetch('backend', {
-        credentials: 'omit'
-    }).then(function (T) {
-        if (T.ok) {
-            return T.json();
-        }
-        return Promise.reject(T);
-    }).then(function (T) {
-        var s = getSearchParams('backend');
-        console.log('getSearchParams(\'backend\'):', s);
-        if (s) {
-            setSearchParams('backend', s);
-            return;
-        } else {
-            console.log('tryGetBackendConfigFromServer T:', T);
-            var host = _.get(T, 'host', defaultBackendHost);
-            var port = _.get(T, 'port', defaultBackendPort);
-            if (!(_.isString(host) && host.length > 0)) {
-                host = document.location.hostname;
-            }
-            if (_.isString(port)) {
-                port = _.parseInt(port);
-            }
-            if (!(port > 0 && port < 65536)) {
-                port = defaultBackendPort;
-            }
-            console.log('tryGetBackendConfigFromServer [host, port]:', [host, port]);
-            setSearchParams('backend', host + ':' + port);
-            return;
-        }
-    }).catch(function (e) {
-        console.warn(e);
-        var s = getSearchParams('backend');
-        if (s) {
-            setSearchParams('backend', s);
-        } else {
-            setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-        }
-    }).then(function () {
-        app.flush();
-    })
-}
-
-function getBackend() {
-    var s = getSearchParams('backend');
-    if (s) {
-        return s;
-    } else {
-        // setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-        return defaultBackendHost + ':' + defaultBackendPort;
-    }
-}
-
-function serverTimeString2Moment(ts: string): moment.Moment {
-    return moment(ts, [
-        "YYYY.MM.DD-HH.mm.ss.SSS",
-        "YYYY.MM.DD-HH.mm.ss.SS",
-        "YYYY.MM.DD-HH.mm.ss.S",
-    ], true);
-}
-
-const SelectableI18NLanguageTable = [
-    ['zh-CN', '中文'],
-    ['en-US', 'English']
-];
-const getI18nTable = (l: 'zh-CN' | 'en-US' | string | undefined = undefined) => {
-    const ls = localStorage.getItem('selectedLanguageI18nTable');
-    const lang = l || ls || window.navigator.language;
-    if (lang === "zh-CN") {
-        console.log('chinese');
-        // chinese
-        window.i18nTable = zhCN;
-        moment.locale('zh-CN');
-    } else if (lang === "en-US") {
-        console.log('english');
-        // english
-        window.i18nTable = enUS;
-        moment.locale('en-US');
-    } else {
-        console.log('none');
-        // english
-        window.i18nTable = enUS;
-        moment.locale('en-US');
-    }
-    // formatDuration = window.i18nTable.formatDurationFunction.f as any;
+getI18nTable(() => {
     app && app.flushI18nTable();
-    localStorage.setItem('selectedLanguageI18nTable', lang);
-};
-getI18nTable();
-window.getI18nTable = getI18nTable;
+});
+window.getI18nTable = getI18nTable.bind(undefined, () => {
+    app && app.flushI18nTable();
+});
+
 
 
 console.log('start')
@@ -183,7 +68,9 @@ class VueAppData {
     tableState = window.i18nTable;
 
     set nowLang(l: string) {
-        getI18nTable(l as any);
+        getI18nTable(() => {
+            app && app.flushI18nTable();
+        }, l as any);
         location.reload();
     }
 
@@ -195,6 +82,9 @@ class VueAppData {
 
     SelectableI18NLanguageTable = SelectableI18NLanguageTable;
 
+    name = '';
+    host = '';
+    port = '';
 
     tcpPingWastID = '';
     httpPingWastID = '';
@@ -220,6 +110,9 @@ class VueAppMethods {
             }
             return Promise.reject(T);
         }).then((T: ServerBackendDelayInfo) => {
+            app.name = T.BaseInfo.name;
+            app.host = T.BaseInfo.host;
+            app.port = T.BaseInfo.port;
             // wash data
             T.tcpPing = T.tcpPing ? T.tcpPing.map(N => {
                 return {
@@ -299,5 +192,7 @@ var app: Vue & VueAppData & VueAppMethods = new Vue({
     methods: new VueAppMethods(),
 });
 app.flushI18nTable();
-tryGetBackendConfigFromServer();
+tryGetBackendConfigFromServer(() => {
+    return app.flush();
+});
 

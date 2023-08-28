@@ -61,16 +61,28 @@
 </head>
 <body>
 
-<div style="width: calc(100vw);height: calc(30vh);">
+<div style="width: calc(100vw);height: calc(30vh - 1rem);">
     <canvas id="tcpPingC" width="400" height="400"></canvas>
 </div>
-<div style="width: calc(100vw);height: calc(30vh);">
+<div style="width: calc(100vw);height: calc(30vh - 1rem);">
     <canvas id="httpPingC" width="400" height="400"></canvas>
 </div>
-<div style="width: calc(100vw);height: calc(30vh);">
+<div style="width: calc(100vw);height: calc(30vh - 1rem);">
     <canvas id="relayFirstPingC" width="400" height="400"></canvas>
 </div>
 <div class="container mt-3" id="app">
+    <div class="row">
+        <div class="col">
+            <span>{{ tableState.name.s }}</span>
+            <span>{{ name }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.Host_Port.s }}</span>
+            <span>{{ host }}:{{ port }}</span>
+        </div>
+        <div class="col">
+        </div>
+    </div>
     <div class="row">
         <div class="col">
             <span>{{ tableState.startTime.s }}</span>

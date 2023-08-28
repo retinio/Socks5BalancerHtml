@@ -25,360 +25,39 @@ import _ from "lodash";
 
 import 'i18n-table/en-US';
 import 'i18n-table/zh-CN';
-import {I18NTableType, zhCN} from "./i18n-table/zh-CN";
-import {enUS} from "./i18n-table/en-US";
+import {I18NTableType} from './I18NTableType';
+import {ServerStateType} from './ServerStateType';
+import {
+    tryGetBackendConfigFromServer,
+    serverTimeString2Moment,
+    getBackend,
+    getSearchParams,
+    getI18nTable,
+    SelectableI18NLanguageTable,
+    setBackend,
+    reduceField,
+    dataCount2String,
+    defaultBackendHost,
+    defaultBackendPort,
+    formatData,
+    speed2String,
+    formatSpeed,
+    formatInt,
+    formatSpeedMax,
+    setSearchParams,
+    formatNumber2FixedLength,
+} from './utils';
 
 import {ChartData, Chart, registerables, ChartItem} from "chart.js";
 
 Chart.register(...registerables);
 
-export interface ServerStateType {
-    config: {
-        listenHost: string,
-        listenPort: string,
-        testRemoteHost: string,
-        testRemotePort: string,
-        stateServerHost: string,
-        stateServerPort: string,
-        retryTimes: string,
-        disableConnectTest: string,
-        traditionTcpRelay: string,
-        serverChangeTime: string,
-        connectTimeout: string,
-        sleepTime: string,
-        tcpCheckPeriod: string,
-        tcpCheckStart: string,
-        connectCheckPeriod: string,
-        connectCheckStart: string,
-        additionCheckPeriod: string,
-        relayId: string,
-        relayIdMod: string,
-        upstream: {
-            name: string,
-            host: string,
-            port: string,
-            disable: string,
-        }[],
-        EmbedWebServerConfig: {
-            enable: string,
-            host: string,
-            port: string,
-            backendHost: string,
-            backendPort: string,
-            root_path: string,
-            index_file_of_root: string,
-            backend_json_string: string,
-        },
-    },
-    nowRule: string,
-    pool: {
-        getLastUseUpstreamIndex: string,
-        lastConnectComeTime: string,
-        lastConnectComeTimeAgo: string,
-        upstream: {
-            index: string | number,
-            name: string,
-            host: string,
-            port: string,
-            isOffline: string,
-            lastConnectFailed: string,
-            isManualDisable: string,
-            disable: string,
-            lastConnectCheckResult: string,
-            connectCount: string,
-            lastOnlineTime: string,
-            lastConnectTime: string,
-            isWork: string,
-            byteDownChange: string,
-            byteUpChange: string,
-            byteDownLast: string,
-            byteUpLast: string,
-            byteUpChangeMax: string,
-            byteDownChangeMax: string,
-            sessionsCount: string,
-            connectCount2: string,
-            byteInfo: string,
-        }[]
-    },
-    RuleEnumList: string[],
-    lastConnectServerIndex: string,
-    UpstreamIndex: {
-        index: string | number,
-        connectCount: string,
-        sessionsCount: string,
-        byteDownChange: string,
-        byteUpChange: string,
-        byteDownLast: string,
-        byteUpLast: string,
-        byteUpChangeMax: string,
-        byteDownChangeMax: string,
-        rule: string,
-        lastUseUpstreamIndex: string | number,
-        byteInfo: string,
-    }[],
-    ClientIndex: {
-        index: string | number,
-        connectCount: string,
-        sessionsCount: string,
-        byteDownChange: string,
-        byteUpChange: string,
-        byteDownLast: string,
-        byteUpLast: string,
-        byteUpChangeMax: string,
-        byteDownChangeMax: string,
-        rule: string,
-        lastUseUpstreamIndex: string | number,
-        byteInfo: string,
-    }[],
-    ListenIndex: {
-        index: string | number,
-        connectCount: string,
-        sessionsCount: string,
-        byteDownChange: string,
-        byteUpChange: string,
-        byteDownLast: string,
-        byteUpLast: string,
-        byteUpChangeMax: string,
-        byteDownChangeMax: string,
-        rule: string,
-        lastUseUpstreamIndex: string | number,
-        byteInfo: string,
-    }[],
-    AuthIndex: {
-        id: string | number,
-        connectCount: string,
-        sessionsCount: string,
-        byteDownChange: string,
-        byteUpChange: string,
-        byteDownLast: string,
-        byteUpLast: string,
-        byteUpChangeMax: string,
-        byteDownChangeMax: string,
-        rule: string,
-        lastUseUpstreamIndex: string | number,
-        AuthUser: {
-            ok: string,
-            id: string,
-            user: string,
-            pwd: string,
-            base64: string,
-        },
-        byteInfo: string,
-        user: string,
-        pwd: string,
-        base64: string,
-    }[],
-    startTime: string,
-    runTime: string,
-    nowTime: string,
-    VersionInfoString: string,
-}
-
-// @ts-ignore
-function formatInt(int: number) {
-    if (int < 10) {
-        return `0${int}`;
-    }
-    return `${int}`;
-}
-
-let formatDuration = function (time: number) {
-    const seconds = moment.duration(time).seconds();
-    const minutes = moment.duration(time).minutes();
-    const hours = moment.duration(time).hours();
-    const days = moment.duration(time).days();
-    const months = moment.duration(time).months();
-    const years = moment.duration(time).years();
-    if (years > 0) {
-        return `${years}Y-${months}M-${days}Day ${formatInt(hours)}h:${formatInt(minutes)}m:${formatInt(seconds)}s`;
-    }
-    if (months > 0) {
-        return `${months}M-${days}Day ${formatInt(hours)}h:${formatInt(minutes)}m:${formatInt(seconds)}s`;
-    }
-    if (days > 0) {
-        return `${days}Day ${formatInt(hours)}h:${formatInt(minutes)}m:${formatInt(seconds)}s`;
-    }
-    if (hours > 0) {
-        return `${formatInt(hours)}h:${formatInt(minutes)}m:${formatInt(seconds)}s`;
-    }
-    if (minutes > 0) {
-        return `${formatInt(minutes)}m:${formatInt(seconds)}s`;
-    }
-    return `00m:${formatInt(seconds)}s`;
-}
-
-function formatNumber2FixedLength(n: number) {
-    return n.toFixed(3);
-}
-
-function speed2String(s: number) {
-    if (s < 1024) {
-        return '' + s + 'Byte/s';
-    } else if (s < Math.pow(1024, 2)) {
-        return '' + formatNumber2FixedLength(s / Math.pow(1024, 1)) + 'KB/s';
-    } else if (s < Math.pow(1024, 3)) {
-        return '' + formatNumber2FixedLength(s / Math.pow(1024, 2)) + 'MB/s';
-    } else if (s < Math.pow(1024, 4)) {
-        return '' + formatNumber2FixedLength(s / Math.pow(1024, 3)) + 'GB/s';
-    } else if (s < Math.pow(1024, 5)) {
-        return '' + formatNumber2FixedLength(s / Math.pow(1024, 4)) + 'TB/s';
-    } else if (s < Math.pow(1024, 6)) {
-        return '' + formatNumber2FixedLength(s / Math.pow(1024, 5)) + 'EB/s';
-    }
-    // never go there
-    return '';
-}
-
-function dataCount2String(d: number) {
-    if (d < 1024) {
-        return '' + d + 'Byte';
-    } else if (d < Math.pow(1024, 2)) {
-        return '' + formatNumber2FixedLength(d / Math.pow(1024, 1)) + 'KB';
-    } else if (d < Math.pow(1024, 3)) {
-        return '' + formatNumber2FixedLength(d / Math.pow(1024, 2)) + 'MB';
-    } else if (d < Math.pow(1024, 4)) {
-        return '' + formatNumber2FixedLength(d / Math.pow(1024, 3)) + 'GB';
-    } else if (d < Math.pow(1024, 5)) {
-        return '' + formatNumber2FixedLength(d / Math.pow(1024, 4)) + 'TB';
-    } else if (d < Math.pow(1024, 6)) {
-        return '' + formatNumber2FixedLength(d / Math.pow(1024, 5)) + 'EB';
-    }
-    // never go there
-    return '';
-}
-
-function formatSpeedMax(u: ServerStateType['pool']['upstream'][0]) {
-    if (u.byteInfo === 'true') {
-        return '↑' + speed2String(_.parseInt(u.byteUpChangeMax)) + ' ↓' + speed2String(_.parseInt(u.byteDownChangeMax));
-    } else {
-        return '↑' + speed2String(0) + ' ↓' + speed2String(0);
-    }
-}
-
-function formatSpeed(u: ServerStateType['pool']['upstream'][0]) {
-    if (u.byteInfo === 'true') {
-        return '↑' + speed2String(_.parseInt(u.byteUpChange)) + ' ↓' + speed2String(_.parseInt(u.byteDownChange));
-    } else {
-        return '↑' + speed2String(0) + ' ↓' + speed2String(0);
-    }
-}
-
-function formatData(u: ServerStateType['pool']['upstream'][0]) {
-    if (u.byteInfo === 'true') {
-        return '↑' + dataCount2String(_.parseInt(u.byteUpLast)) + ' ↓' + dataCount2String(_.parseInt(u.byteDownLast));
-    } else {
-        return '↑' + dataCount2String(0) + ' ↓' + dataCount2String(0);
-    }
-}
-
-function reduceField<TType>(T: TType[], F: keyof TType) {
-    return _.reduce(T, function (acc, n) {
-        return acc + _.parseInt(_.get(n, F, "0"));
-    }, 0);
-}
-
-function getSearchParams(key: string) {
-    var q = (new URL(document.location as unknown as string)).searchParams;
-    return q.get(key);
-}
-
-function setSearchParams(key: string, value: string) {
-    var newQ = (new URL(document.location as unknown as string)).searchParams;
-    newQ.set(key, value);
-    window.history.pushState(null, null as unknown as string, '?' + newQ.toString());
-}
-
-function serverTimeString2Moment(ts: string): moment.Moment {
-    return moment(ts, [
-        "YYYY.MM.DD-HH.mm.ss.SSS",
-        "YYYY.MM.DD-HH.mm.ss.SS",
-        "YYYY.MM.DD-HH.mm.ss.S",
-    ], true);
-}
-
-function tryGetBackendConfigFromServer() {
-    fetch('backend', {
-        credentials: 'omit'
-    }).then(function (T) {
-        if (T.ok) {
-            return T.json();
-        }
-        return Promise.reject(T);
-    }).then(function (T) {
-        var s = getSearchParams('backend');
-        console.log('getSearchParams(\'backend\'):', s);
-        if (s) {
-            setSearchParams('backend', s);
-            return;
-        } else {
-            console.log('tryGetBackendConfigFromServer T:', T);
-            var host = _.get(T, 'host', defaultBackendHost);
-            var port = _.get(T, 'port', defaultBackendPort);
-            if (!(_.isString(host) && host.length > 0)) {
-                host = document.location.hostname;
-            }
-            if (_.isString(port)) {
-                port = _.parseInt(port);
-            }
-            if (!(port > 0 && port < 65536)) {
-                port = defaultBackendPort;
-            }
-            console.log('tryGetBackendConfigFromServer [host, port]:', [host, port]);
-            setSearchParams('backend', host + ':' + port);
-            return;
-        }
-    }).catch(function (e) {
-        console.warn(e);
-        var s = getSearchParams('backend');
-        if (s) {
-            setSearchParams('backend', s);
-        } else {
-            setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-        }
-    }).then(function () {
-        app.flush();
-    })
-}
-
-// function createChart(target2DContext) {
-//     return new Chart(target2DContext, {
-//         type: 'line',
-//     })
-// }
-
-
-let defaultBackendHost = "127.0.0.1";
-let defaultBackendPort = 5010;
-
-const SelectableI18NLanguageTable = [
-    ['zh-CN', '中文'],
-    ['en-US', 'English']
-];
-const getI18nTable = (l: 'zh-CN' | 'en-US' | string | undefined = undefined) => {
-    const ls = localStorage.getItem('selectedLanguageI18nTable');
-    const lang = l || ls || window.navigator.language;
-    if (lang === "zh-CN") {
-        console.log('chinese');
-        // chinese
-        window.i18nTable = zhCN;
-        moment.locale('zh-CN');
-    } else if (lang === "en-US") {
-        console.log('english');
-        // english
-        window.i18nTable = enUS;
-        moment.locale('en-US');
-    } else {
-        console.log('none');
-        // english
-        window.i18nTable = enUS;
-        moment.locale('en-US');
-    }
-    formatDuration = window.i18nTable.formatDurationFunction.f as any;
+getI18nTable(() => {
     app && app.flushI18nTable();
-    localStorage.setItem('selectedLanguageI18nTable', lang);
-};
-getI18nTable();
-window.getI18nTable = getI18nTable;
+});
+window.getI18nTable = getI18nTable.bind(undefined, () => {
+    app && app.flushI18nTable();
+});
 
 class VueAppData {
     i18nTable: I18NTableType = {} as any;
@@ -423,17 +102,11 @@ class VueAppData {
     AuthIndex: ServerStateType['AuthIndex'] = [];
 
     get backend() {
-        var s = getSearchParams('backend');
-        if (s) {
-            return s;
-        } else {
-            // setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-            return defaultBackendHost + ':' + defaultBackendPort;
-        }
+        return getBackend();
     };
 
     set backend(s) {
-        setSearchParams('backend', s);
+        setBackend(s);
     };
 
     InternetState = {
@@ -445,7 +118,9 @@ class VueAppData {
     tableState = window.i18nTable;
 
     set nowLang(l: string) {
-        getI18nTable(l as any);
+        getI18nTable(() => {
+            app && app.flushI18nTable();
+        }, l as any);
         location.reload();
     }
 
@@ -469,7 +144,7 @@ class VueAppMethods {
         if (ts === "<empty>") {
             return "<empty>";
         }
-        return formatDuration(moment.duration(
+        return window.i18nTable.formatDurationFunction.f!(moment.duration(
             serverTimeString2Moment(app.nowTime).valueOf() - serverTimeString2Moment(ts).valueOf()
         ).asMilliseconds());
     };
@@ -539,11 +214,7 @@ class VueAppMethods {
 
                 app.runTime = T.runTime;
                 app.runTimeString = moment.duration(_.parseInt(T.runTime)).humanize();
-                if (window.i18nTable && window.i18nTable.formatDurationFunction) {
-                    app.runTimeString2 = window.i18nTable.formatDurationFunction.f!(_.parseInt(T.runTime));
-                } else {
-                    app.runTimeString2 = formatDuration(_.parseInt(T.runTime));
-                }
+                app.runTimeString2 = window.i18nTable.formatDurationFunction.f!(_.parseInt(T.runTime));
 
                 app.startTime = T.startTime;
 
@@ -592,11 +263,7 @@ class VueAppMethods {
                 app.lastConnectComeTime = T.pool.lastConnectComeTime;
                 app.lastConnectComeTimeAgo = _.parseInt(T.pool.lastConnectComeTimeAgo);
                 app.lastConnectComeTimeAgoString = moment.duration(app.lastConnectComeTimeAgo).humanize();
-                if (window.i18nTable && window.i18nTable.formatDurationFunction) {
-                    app.lastConnectComeTimeAgoString2 = window.i18nTable.formatDurationFunction.f!(app.lastConnectComeTimeAgo);
-                } else {
-                    app.lastConnectComeTimeAgoString2 = formatDuration(app.lastConnectComeTimeAgo);
-                }
+                app.lastConnectComeTimeAgoString2 = window.i18nTable.formatDurationFunction.f!(app.lastConnectComeTimeAgo);
 
                 app.lastConnectServerIndex = _.parseInt(T.lastConnectServerIndex);
                 app.lastConnectServer = app.upstreamPool.find(function (n: ServerStateType['pool']['upstream'][0]) {
@@ -655,4 +322,6 @@ var app: Vue & VueAppData & VueAppMethods = new Vue({
     methods: new VueAppMethods(),
 });
 app.flushI18nTable();
-tryGetBackendConfigFromServer();
+tryGetBackendConfigFromServer(() => {
+    return app.flush();
+});
