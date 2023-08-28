@@ -5,6 +5,12 @@ export interface DelayInfoItem {
     time: string,
 }
 
+export interface SystemTine {
+    startTime: string;
+    runTime: number;
+    nowTime: string;
+}
+
 export interface ServerBackendDelayInfo {
     BaseInfo: ServerStateType['pool']['upstream'][0];
     tcpPing?: DelayInfoItem[],
@@ -21,8 +27,14 @@ export interface ServerBackendDelayInfo {
         httpPingMax: number,
         relayFirstPingMax: number,
     };
-    startTime: string;
-    runTime: number;
-    nowTime: string;
+}
+
+export interface ServerBackendDelayInfoOne extends SystemTine, ServerBackendDelayInfo {
+    CollectWastTime: number;
+}
+
+export interface ServerBackendDelayInfoAll extends SystemTine {
+    pool: ServerBackendDelayInfo[];
+    CollectWastTime: number;
 }
 

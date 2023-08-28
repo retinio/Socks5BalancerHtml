@@ -24,7 +24,7 @@ import _ from "lodash";
 import 'i18n-table/en-US';
 import 'i18n-table/zh-CN';
 import {I18NTableType} from './I18NTableType';
-import {ServerBackendDelayInfo, DelayInfoItem} from './ServerBackendDelayInfo';
+import {ServerBackendDelayInfo, DelayInfoItem, ServerBackendDelayInfoOne} from './ServerBackendDelayInfo';
 import {
     tryGetBackendConfigFromServer,
     serverTimeString2Moment,
@@ -148,7 +148,7 @@ class VueAppMethods {
                 return T.json();
             }
             return Promise.reject(T);
-        }).then((T: ServerBackendDelayInfo) => {
+        }).then((T: ServerBackendDelayInfoOne) => {
             app.name = T.BaseInfo.name;
             app.host = T.BaseInfo.host;
             app.port = T.BaseInfo.port;
