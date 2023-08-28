@@ -958,6 +958,7 @@ __metadata:
     "@types/node": ^20.5.3
     "@webpack-cli/generators": ^3.0.7
     chart.js: ^4.4.0
+    chartjs-adapter-moment: ^1.0.1
     fork-ts-checker-webpack-plugin: ^8.0.0
     lodash: ^4.17.21
     moment: ^2.29.4
@@ -1448,6 +1449,16 @@ __metadata:
   dependencies:
     "@kurkle/color": ^0.3.0
   checksum: 5ee2d99b78608025525b5790af17178fdaa5adc3294e082deba2718029b0496109ba124f1b08dd1e4c8a04d6e842be7f384f2cfe9a11df8d1c6fe884acece52b
+  languageName: node
+  linkType: hard
+
+"chartjs-adapter-moment@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chartjs-adapter-moment@npm:1.0.1"
+  peerDependencies:
+    chart.js: ">=3.0.0"
+    moment: ^2.10.2
+  checksum: 2d0455bce53bd398b206a32eb387a3cc3957f7f9bb9094556a11be9e13ef87913c11e3e854b2ccab6513a607282896ebe9881cdc00b7b122bba36871bf845121
   languageName: node
   linkType: hard
 

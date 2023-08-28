@@ -35,6 +35,8 @@ import {
 } from './utils';
 
 import {ChartData, Chart, registerables, ChartItem} from "chart.js";
+import 'chartjs-adapter-moment';
+import {CartesianScaleTypeRegistry, LogarithmicScaleOptions, TimeScaleOptions} from "chart.js/dist/types";
 
 Chart.register(...registerables);
 
@@ -46,8 +48,44 @@ window.getI18nTable = getI18nTable.bind(undefined, () => {
 });
 
 
-
 console.log('start')
+
+function makeChartTimeBase(element: ChartItem, data: ChartData<'line'>) {
+    return new Chart(
+        element,
+        {
+            type: 'line',
+            data: data,
+            options: {
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        // https://www.chartjs.org/docs/latest/axes/cartesian/time.html#display-formats
+                        // https://stackoverflow.com/questions/73576685/chartjs-moment-and-chartjs-time-format-parsing
+                        type: 'time',
+                        options: {
+                            adapters: {
+                                date: moment,
+                            },
+                        },
+                        time: {
+                            unit: 'second',
+                            displayFormats: {
+                                second: 'YYYY.MM.DD-HH.mm.ss',
+                                millisecond: 'YYYY.MM.DD-HH.mm.ss.SSS',
+                            },
+                        },
+                    } as any as TimeScaleOptions,
+                    y: {
+                        type: 'logarithmic',
+                        bounds: 'ticks'
+                    } as any as LogarithmicScaleOptions,
+                },
+            },
+        }
+    );
+}
 
 function makeChart(element: ChartItem, data: ChartData<'line'>) {
     return new Chart(
@@ -57,6 +95,7 @@ function makeChart(element: ChartItem, data: ChartData<'line'>) {
             data: data,
             options: {
                 maintainAspectRatio: false,
+                animation: false,
             },
         }
     );
@@ -140,30 +179,69 @@ class VueAppMethods {
                 total: _.parseInt(T.PingInfoTotal.total as unknown as string),
             };
             // init chart
-            app.tcpPingC = makeChart('tcpPingC', {
-                labels: T.tcpPing.map(N => N.time),
-                datasets: [{
+            const dataset: ChartData<'line'>['datasets'] = [
+                {
                     label: 'tcpPing',
-                    data: T.tcpPing.map(N => N.delay),
+                    data: T.tcpPing.map(N => {
+                        return {
+                            x: serverTimeString2Moment(N.time) as any,
+                            y: N.delay,
+                        };
+                    }),
                     fill: false,
-                }],
-            });
-            app.httpPingC = makeChart('httpPingC', {
-                labels: T.httpPing.map(N => N.time),
-                datasets: [{
+                }, {
                     label: 'httpPing',
-                    data: T.httpPing.map(N => N.delay),
+                    data: T.httpPing.map(N => {
+                        return {
+                            x: serverTimeString2Moment(N.time) as any,
+                            y: N.delay,
+                        };
+                    }),
                     fill: false,
-                }],
-            });
-            app.relayFirstPingC = makeChart('relayFirstPingC', {
-                labels: T.relayFirstPing.map(N => N.time),
-                datasets: [{
+                }, {
                     label: 'relayFirstPing',
-                    data: T.relayFirstPing.map(N => N.delay),
+                    data: T.relayFirstPing.map(N => {
+                        return {
+                            x: serverTimeString2Moment(N.time) as any,
+                            y: N.delay,
+                        };
+                    }) as ChartData<'line'>['datasets'][0]['data'],
                     fill: false,
-                }],
+                } as ChartData<'line'>['datasets'][0],
+            ];
+            app.httpPingC = makeChartTimeBase('timeC', {
+                // labels: T.httpPing.map(N => serverTimeString2Moment(N.time)),
+                datasets: dataset,
             });
+            // https://www.chartjs.org/docs/latest/axes/cartesian/time.html#changing-the-scale-type-from-time-scale-to-logarithmic-linear-scale
+
+            // // init chart
+            // app.tcpPingC = makeChart('tcpPingC', {
+            //     labels: T.tcpPing.map(N => N.time),
+            //     datasets: [{
+            //         label: 'tcpPing',
+            //         data: T.tcpPing.map(N => N.delay),
+            //         fill: false,
+            //     }],
+            // });
+            // app.httpPingC = makeChart('httpPingC', {
+            //     labels: T.httpPing.map(N => N.time),
+            //     datasets: [{
+            //         label: 'httpPing',
+            //         data: T.httpPing.map(N => N.delay),
+            //         fill: false,
+            //     }],
+            // });
+            // app.relayFirstPingC = makeChart('relayFirstPingC', {
+            //     labels: T.relayFirstPing.map(N => N.time),
+            //     datasets: [{
+            //         label: 'relayFirstPing',
+            //         data: T.relayFirstPing.map(N => N.delay),
+            //         fill: false,
+            //     }],
+            // });
+
+
             // show info
             app.startTimeID = T.startTime;
             app.runTimeID = '' + T.runTime;
