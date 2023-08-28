@@ -118,6 +118,18 @@
             <span id="totalWastID">{{ totalWastID }}</span>
         </div>
     </div>
+    <div class="row">
+        <div class="col">
+            <form action="#" method="get" target="_self" class="input-group" style="max-width: 20em;">
+                <select name="nowLang" v-model="$data.nowLang" class="form-control">
+                    <template v-for="t in SelectableI18NLanguageTable">
+                        <option v-if="t[0]===$data.nowLang" v-bind:value="t[0]" selected>{{ t[1] }}</option>
+                        <option v-else v-bind:value="t[0]">{{ t[1] }}</option>
+                    </template>
+                </select>
+            </form>
+        </div>
+    </div>
 </div>
 <script src="./DelayInfo.js"></script>
 </body>
