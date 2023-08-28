@@ -13,6 +13,7 @@ const config = {
   entry: {
     boot: './boot.ts',
     DelayInfo: './DelayInfo.ts',
+    DelayInfoAll: './DelayInfoAll.ts',
   },
   output: {
     path: path.resolve(__dirname/*, 'dist'*/),

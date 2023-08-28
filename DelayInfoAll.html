@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DelayInfoAll</title>
+    <script>
+        /**
+         * Socks5BalancerAsio : A Simple TCP Socket Balancer for balance Multi Socks5 Proxy Backend Powered by Boost.Asio
+         * Copyright (C) <2020>  <Jeremie>
+         *
+         * This program is free software: you can redistribute it and/or modify
+         * it under the terms of the GNU General Public License as published by
+         * the Free Software Foundation, either version 3 of the License, or
+         * (at your option) any later version.
+         *
+         * This program is distributed in the hope that it will be useful,
+         * but WITHOUT ANY WARRANTY; without even the implied warranty of
+         * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+         * GNU General Public License for more details.
+         *
+         * You should have received a copy of the GNU General Public License
+         * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+         */
+    </script>
+    <style type="text/css">
+        th {
+            border: black 0 dashed;
+            border-left-width: 1px;
+            border-bottom: lightslategrey 1px solid;
+        }
+
+        td {
+            border: lightslategrey 1px solid;
+            border-right-width: 0;
+            border-top-width: 0;
+        }
+
+        tr:hover {
+            background-color: lightblue;
+        }
+
+        tfoot > tr:hover {
+            background-color: inherit;
+        }
+
+        .string-pad {
+            margin: 0 0.5em 0 0.5em;
+        }
+
+        .table-info-cell {
+            border: blueviolet 2px solid;
+            margin: 0.25em 0.5em;
+            padding: 0.2em 0;
+        }
+
+        .opacity_01 {
+            opacity: 0.1;
+        }
+    </style>
+    <link rel="stylesheet" href="./bootstrap.min.css">
+</head>
+<body>
+
+<div style="width: calc(100vw);height: calc(30vh - 1em);">
+    <canvas id="tcpPingC"></canvas>
+</div>
+<div style="width: calc(100vw);height: calc(30vh - 1em);">
+    <canvas id="httpPingC"></canvas>
+</div>
+<div style="width: calc(100vw);height: calc(30vh - 1em);">
+    <canvas id="relayFirstPingC"></canvas>
+</div>
+<div class="container mt-3" id="app">
+    <!--    <div class="row">-->
+    <!--        <div class="col">-->
+    <!--            <span>{{ tableState.name.s }}</span>-->
+    <!--            <span>{{ name }}</span>-->
+    <!--        </div>-->
+    <!--        <div class="col">-->
+    <!--            <span>{{ tableState.Host_Port.s }}</span>-->
+    <!--            <span>{{ host }}:{{ port }}</span>-->
+    <!--        </div>-->
+    <!--        <div class="col">-->
+    <!--        </div>-->
+    <!--    </div>-->
+    <div class="row">
+        <div class="col">
+            <span>{{ tableState.startTime.s }}</span>
+            <span id="startTimeID">{{ startTimeID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.runTime.s }}</span>
+            <span id="runTimeID">{{ runTimeID }}</span>
+        </div>
+        <div class="col">
+            <span>{{ tableState.nowTime.s }}</span>
+            <span id="nowTimeID">{{ nowTimeID }}</span>
+        </div>
+        <div class="total">
+            <span>{{ tableState.totalWast.s }}</span>
+            <span id="totalWastID">{{ totalWastID }}</span>
+        </div>
+    </div>
+    <!--    <div class="row">-->
+    <!--        <div class="col">-->
+    <!--            <span>{{ tableState.tcpPingWast.s }}</span>-->
+    <!--            <span id="tcpPingWastID">{{ tcpPingWastID }}</span>-->
+    <!--        </div>-->
+    <!--        <div class="col">-->
+    <!--            <span>{{ tableState.httpPingWast.s }}</span>-->
+    <!--            <span id="httpPingWastID">{{ httpPingWastID }}</span>-->
+    <!--        </div>-->
+    <!--        <div class="col">-->
+    <!--            <span>{{ tableState.relayFirstPingWast.s }}</span>-->
+    <!--            <span id="relayFirstPingWastID">{{ relayFirstPingWastID }}</span>-->
+    <!--        </div>-->
+    <!--        <div class="total">-->
+    <!--            <span>{{ tableState.totalWast.s }}</span>-->
+    <!--            <span id="totalWastID">{{ totalWastID }}</span>-->
+    <!--        </div>-->
+    <!--    </div>-->
+    <div class="row">
+        <div class="col">
+            <form action="#" method="get" target="_self" class="input-group" style="max-width: 20em;">
+                <select name="nowLang" v-model="$data.nowLang" class="form-control">
+                    <template v-for="t in SelectableI18NLanguageTable">
+                        <option v-if="t[0]===$data.nowLang" v-bind:value="t[0]" selected>{{ t[1] }}</option>
+                        <option v-else v-bind:value="t[0]">{{ t[1] }}</option>
+                    </template>
+                </select>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="./DelayInfoAll.js"></script>
+</body>
+</html>
