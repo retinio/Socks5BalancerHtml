@@ -232,3 +232,6 @@ boot.js
 boot.js.map
 DelayInfo.js
 DelayInfo.js.map
+*.js
+*.js.map
+!webpack.config.js
