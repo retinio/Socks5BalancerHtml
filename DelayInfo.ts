@@ -70,8 +70,12 @@ function makeChartTimeBase(element: ChartItem, data: ChartData<'line'>) {
                             },
                         },
                         time: {
-                            unit: 'second',
+                            // https://github.com/chartjs/Chart.js/issues/7597
+                            // unit: 'second',
                             displayFormats: {
+                                day: 'YYYY.MM.DD',
+                                hour: 'YYYY.MM.DD-HH',
+                                minute: 'YYYY.MM.DD-HH.mm',
                                 second: 'YYYY.MM.DD-HH.mm.ss',
                                 millisecond: 'YYYY.MM.DD-HH.mm.ss.SSS',
                             },
