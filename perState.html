@@ -67,10 +67,6 @@
         }
     </style>
     <link rel="stylesheet" href="./bootstrap.min.css">
-    <script src="./lodash.min.js"></script>
-    <script src="./vue.js"></script>
-    <script src="./moment.min.js"></script>
-    <script src="./zh-cn.js"></script>
 </head>
 <body>
 <div id="body" style="padding: 0.5rem;">
@@ -79,7 +75,7 @@
     <br/>
     <label>
         backend:
-        <input class="string-pad" name="backend" v-model="backend"/>
+        <input class="string-pad" name="backend" v-model="$data.backend"/>
     </label>
     <button v-on:click="flush">Flush</button>
     <br/>
@@ -91,11 +87,11 @@
             <th colspan="15" v-bind:colspan="dataTable.h.length+3"
                 style="text-align: center;"
             >
-                <template v-if="targetMode==='client'">
-                    Client <span style="font-weight: normal;color: blueviolet;">{{target}}</span> Table
+                <template v-if="$data.targetMode==='client'">
+                    Client <span style="font-weight: normal;color: blueviolet;">{{$data.target}}</span> Table
                 </template>
-                <template v-else-if="targetMode==='listen'">
-                    Listen <span style="font-weight: normal;color: blueviolet;">{{target}}</span> Table
+                <template v-else-if="$data.targetMode==='listen'">
+                    Listen <span style="font-weight: normal;color: blueviolet;">{{$data.target}}</span> Table
                 </template>
             </th>
         </tr>
@@ -104,14 +100,14 @@
                 No. <br> ↓
             </th>
             <th rowspan="5">
-                <template v-if="targetMode==='client'">
+                <template v-if="$data.targetMode==='client'">
                     Server →<br>
                     <br>
                     <hr style="transform: rotate(30deg);border: 1px dashed;">
                     <br>
                     Listen <br> ↓
                 </template>
-                <template v-else-if="targetMode==='listen'">
+                <template v-else-if="$data.targetMode==='listen'">
                     Server →<br>
                     <br>
                     <hr style="transform: rotate(30deg);border: 1px dashed;">
@@ -162,9 +158,9 @@
                 <th>
                     <a href="javascript:void(0)"
                        v-on:click="sendCommand(
-                       '/op?_targetMode=' + targetMode
+                       '/op?_targetMode=' + $data.targetMode
                        + '&endAllConnect=2'
-                       + '&_target=' + target
+                       + '&_target=' + $data.target
                        + '&_upstream=' + h.index)"
                     >×</a>
                 </th>
@@ -181,8 +177,8 @@
             <tr>
                 <td style="text-align: center;">{{i}}</td>
                 <td>
-                    <template v-if="targetMode==='client'">{{r.ListenEnd}}</template>
-                    <template v-else-if="targetMode==='listen'">{{r.ClientEndpoint}}</template>
+                    <template v-if="$data.targetMode==='client'">{{r.ListenEnd}}</template>
+                    <template v-else-if="$data.targetMode==='listen'">{{r.ClientEndpoint}}</template>
                 </td>
                 <template v-for="h in dataTable.h">
                     <td v-if="h.index===r.serverIndex" style="text-align: center;">√</td>
@@ -214,228 +210,7 @@
     </div>
 </div>
 
-<script>
+<script src="./perState.js"></script>
 
-    function arrayOrEmpty(a) {
-        return _.isArray(a) ? a : [];
-    }
-
-    function getSearchParams(key) {
-        var q = (new URL(document.location)).searchParams;
-        return q.get(key);
-    }
-
-    function setSearchParams(key, value) {
-        var newQ = (new URL(document.location)).searchParams;
-        newQ.set(key, value);
-        window.history.pushState(null, null, '?' + newQ.toString());
-    }
-
-    function tryGetBackendConfigFromServer() {
-        fetch('backend', {
-            credentials: 'omit'
-        }).then(function (T) {
-            if (T.ok) {
-                return T.json();
-            }
-            return Promise.reject(T);
-        }).then(function (T) {
-            var s = getSearchParams('backend');
-            console.log('getSearchParams(\'backend\'):', s);
-            if (s) {
-                setSearchParams('backend', s);
-                return;
-            } else {
-                console.log('tryGetBackendConfigFromServer T:', T);
-                var host = _.get(T, 'host', defaultBackendHost);
-                var port = _.get(T, 'port', defaultBackendPort);
-                if (!(_.isString(host) && host.length > 0)) {
-                    host = document.location.hostname;
-                }
-                if (_.isString(port)) {
-                    port = _.parseInt(port);
-                }
-                if (!(port > 0 && port < 65536)) {
-                    port = defaultBackendPort;
-                }
-                console.log('tryGetBackendConfigFromServer [host, port]:', [host, port]);
-                setSearchParams('backend', host + ':' + port);
-                return;
-            }
-        }).catch(function (e) {
-            console.warn(e);
-            var s = getSearchParams('backend');
-            if (s) {
-                setSearchParams('backend', s);
-            } else {
-                setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-            }
-        }).then(function () {
-            app.flush();
-        })
-    }
-
-    var defaultBackendHost = "127.0.0.1";
-    var defaultBackendPort = 5010;
-
-    moment.locale('zh-cn');
-
-
-    var app = new Vue({
-        el: '#body',
-        data: {
-            ServerJsonInfo_Show: false,
-            get backend() {
-                var s = getSearchParams('backend');
-                if (s) {
-                    return s;
-                } else {
-                    // setSearchParams('backend', defaultBackendHost + ':' + defaultBackendPort);
-                    return defaultBackendHost + ':' + defaultBackendPort;
-                }
-            },
-            set backend(s) {
-                setSearchParams('backend', s);
-            },
-            get targetMode() {
-                return getSearchParams('targetMode');
-            },
-            get target() {
-                return getSearchParams('target');
-            },
-            InternetState: {
-                isOk: false,
-                error: undefined,
-            },
-            ServerJsonInfo: {},
-            BaseInfo: {},
-            UpstreamPool: [],
-            UpstreamIndex: [],
-            ClientIndex: [],
-            ListenIndex: [],
-            dataRef: [],
-            dataTable: {
-                // header
-                // server index,name
-                h: [],
-                // footer
-                f: [],
-                // row
-                r: [],
-            }
-        },
-        computed: {},
-        methods: {
-            flush: function () {
-                const targetMode = getSearchParams('targetMode');
-                let qPath = '';
-                switch (targetMode) {
-                    case 'client':
-                        qPath = 'clientInfo';
-                        break;
-                    case 'listen':
-                        qPath = 'listenInfo';
-                        break;
-                    default:
-                        app.InternetState.isOk = false;
-                        app.InternetState.error = undefined;
-                        return;
-                }
-                const target = getSearchParams('target');
-                fetch('http://' + app.backend + '/' + qPath + '?targetMode=' + targetMode + '&target=' + target, {
-                    credentials: 'omit'
-                }).then(function (T) {
-                    if (T.ok) {
-                        return T.json();
-                    }
-                    return Promise.reject(T);
-                }).then(function (T) {
-                    console.log(T);
-                    if (
-                        _.has(T, 'UpstreamPool') &&
-                        _.has(T, 'UpstreamIndex') &&
-                        (targetMode !== 'client' || _.has(T, 'ClientIndex')) &&
-                        (targetMode !== 'listen' || _.has(T, 'ListenIndex')) &&
-                        _.has(T, 'BaseInfo') &&
-                        _.isObject(T.BaseInfo) &&
-                        _.isArray(T.UpstreamIndex) &&
-                        _.isArray(T.UpstreamPool)
-                    ) {
-                        app.ServerJsonInfo = T;
-
-                        app.BaseInfo = T.BaseInfo;
-                        app.UpstreamPool = arrayOrEmpty(T.UpstreamPool);
-                        app.UpstreamIndex = arrayOrEmpty(T.UpstreamIndex);
-                        app.ClientIndex = arrayOrEmpty(T.ClientIndex);
-                        app.ListenIndex = arrayOrEmpty(T.ListenIndex);
-
-                        app.dataRef = undefined;
-
-                        switch (targetMode) {
-                            case 'client':
-                                app.dataRef = app.ClientIndex;
-                                break;
-                            case 'listen':
-                                app.dataRef = app.ListenIndex;
-                                break;
-                            default:
-                                break;
-                        }
-
-                        if (app.dataRef) {
-                            // process data
-                            app.dataTable = {
-                                // header
-                                // server index,name
-                                h: app.UpstreamPool.map(T => {
-                                    return {
-                                        index: T.index,
-                                        name: T.name,
-                                        isWork: T.isWork,
-                                        count: app.dataRef.reduce(function (acc, r, i) {
-                                            if (T.index === r.serverIndex) {
-                                                ++acc;
-                                            }
-                                            return acc;
-                                        }, 0)
-                                    };
-                                }),
-                                // footer
-                                f: [],
-                                // row
-                                r: app.dataRef,
-                            };
-
-                        }
-
-                        app.InternetState.isOk = true;
-                        app.InternetState.error = undefined;
-                    }
-                }).then(function () {
-                    console.log(app);
-                }).catch(function (e) {
-                    console.error(e);
-                    app.InternetState.isOk = false;
-                    app.InternetState.error = e;
-                });
-            },
-            sendCommand: function (cmd) {
-                fetch('http://' + app.backend + cmd, {
-                    credentials: 'omit'
-                }).then(function (T) {
-                    if (T.ok) {
-                        return T;
-                    }
-                    return Promise.reject(T);
-                }).catch(function (e) {
-                    console.error(e);
-                }).then(function () {
-                    app.flush();
-                });
-            },
-        }
-    });
-    tryGetBackendConfigFromServer();
-</script>
 </body>
 </html>

@@ -14,6 +14,7 @@ const config = {
     boot: './boot.ts',
     DelayInfo: './DelayInfo.ts',
     DelayInfoAll: './DelayInfoAll.ts',
+    perState: './perState.ts',
   },
   output: {
     path: path.resolve(__dirname/*, 'dist'*/),
